@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+Debug/
+Exel.vcxproj
+Exel.vcxproj.filters
+Exel.vcxproj.user
+*.csv
