@@ -3,75 +3,88 @@
 #include<vector>
 #include<fstream>
 #include"Cell.h"
+#include<map>
+#include<utility>
 
 using std::vector;
 using std::ofstream;
 using std::ifstream;
 using std::cout;
 using std::endl;
+using std::map;
+using std::pair;
+
 
 class Table {
-	vector<vector<Cell>> cells;
-	bool validCoordinates(int row, int col) {
-		return row >= 0 && col >= 0 && row < cells.size() && col < numberOfColumns();
+	map<int,map<int,Cell>> cells;
+	bool validCoordinates(int row, int col) const {
+		return cells.count(row) && cells.at(row).count(col);
 	}
 public:
-	void setExpression(int i, int j, const string& expression) {
-		for (int k = cells.size(); k <= i; k++) {
-			cells.push_back(vector<Cell>());
+	void setExpression(int row, int col, const string& expression) {
+		if (!cells.count(row)) {
+			cells[row] = map<int, Cell>();
 		}
-		int newNumberOfColumns = j + 1;
-		if (j + 1 < numberOfColumns()) {
-			newNumberOfColumns = numberOfColumns();
+		cells[row][col] = Cell(&cells, row, col, expression);
+	}
+
+	string getValue(int row, int col) const {
+		if (validCoordinates(row, col)) {
+			return cells.at(row).at(col).getValue();
 		}
-		for (int k = 0; k < cells.size(); k++) {
-			for (int l = cells[k].size(); l < newNumberOfColumns; l++) {
-				cells[k].push_back(Cell(&cells, k, l));
+		return string();
+	}
+
+	string getExpression(int row, int col) const {
+		if (validCoordinates(row, col)) {
+			return cells.at(row).at(col).getExpression();
+		}
+		return string();
+	}
+
+	int numberOfRows() const {
+		int max = 0;
+		for (pair<int, map<int,Cell>> p : cells) {
+			if (max < p.first) {
+				max = p.first;
 			}
 		}
-		cells[i][j].setExpression(expression);
-	}
-
-	string getValue(int i, int j) const {
-		if (i >= cells.size() || j >= numberOfColumns()) {
-			return string();
-		}
-		return cells[i][j].getValue();
-	}
-
-	string getExpression(int i, int j) const {
-		if (i >= cells.size() || j >= numberOfColumns()) {
-			return string();
-		}
-		return cells[i][j].getExpression();
+		return max+1;
 	}
 
 	int numberOfColumns() const {
-		if (cells.size() == 0) {
-			return 0;
+		int max = 0;
+		for (pair<int, map<int, Cell>> p : cells) {
+			for (pair<int, Cell> p1 : p.second) {
+				if (max < p1.first) {
+					max = p1.first;
+				}
+			}
 		}
-		return cells[0].size();
+		return max + 1;
 	}
 
 	void printAllValues() const {
 		vector<int> maxWidths;
-		for (int j = 0; j < numberOfColumns(); j++) {
-			int max = cells[0][j].getValue().size();
-			for (int i = 1; i < cells.size(); i++) {
-				if (max < cells[i][j].getValue().size()) {
-					max = cells[i][j].getValue().size();
+		int colSize = numberOfColumns();
+		int rowSize = numberOfRows();
+		for (int j = 0; j < colSize; j++) {
+			int max = 0;
+			for (int i = 0; i < rowSize; i++) {
+				if (max < getValue(i, j).size()) {
+					max = getValue(i, j).size();
 				}
 			}
 			maxWidths.push_back(max);
 		}
 
-		for (int i = 0; i < cells.size(); i++) {
-			for (int j = 0; j < cells[i].size(); j++) {
+		for (int i = 0; i < rowSize; i++) {
+			for (int j = 0; j < colSize; j++) {
 				cout << "|";
-				for (int k = cells[i][j].getValue().size(); k < maxWidths[j]; k++) {
+				for (int k = getValue(i, j).size(); k < maxWidths[j]; k++) {
 					cout << " ";
 				}
-				cout << cells[i][j].getValue();
+				cout << getValue(i, j);
 			}
 			cout << "|" << endl;
 		}
@@ -79,35 +92,39 @@ public:
 
 	void printAllExpressions() const {
 		vector<int> maxWidths;
-		for (int j = 0; j < numberOfColumns(); j++) {
-			int max = cells[0][j].getExpression().size();
-			for (int i = 1; i < cells.size(); i++) {
-				if (max < cells[i][j].getExpression().size()) {
-					max = cells[i][j].getExpression().size();
+		int colSize = numberOfColumns();
+		int rowSize = numberOfRows();
+		for (int j = 0; j < colSize; j++) {
+			int max = 0;
+			for (int i = 0; i < rowSize; i++) {
+				if (max < getExpression(i, j).size()) {
+					max = getExpression(i, j).size();
 				}
 			}
 			maxWidths.push_back(max);
 		}
 
-		for (int i = 0; i < cells.size(); i++) {
-			for (int j = 0; j < cells[i].size(); j++) {
+		for (int i = 0; i < rowSize; i++) {
+			for (int j = 0; j < colSize; j++) {
 				cout << "|";
-				for (int k = cells[i][j].getExpression().size(); k < maxWidths[j]; k++) {
+				for (int k = getExpression(i, j).size(); k < maxWidths[j]; k++) {
 					cout << " ";
 				}
-				cout << cells[i][j].getExpression();
+				cout << getExpression(i, j);
 			}
 			cout << "|" << endl;
 		}
 	}
 
-	void saveInFile(const string& fileName) {
+	void saveInFile(const string& fileName) const {
 		ofstream out;
 		out.open(fileName);
-		for (int row = 0; row < cells.size(); row++) {
-			for (int col = 0; col < cells[row].size(); col++) {
-				out << cells[row][col].getExpression();
-				if (col != cells[row].size()-1) {
+		int colSize = numberOfColumns();
+		int rowSize = numberOfRows();
+		for (int i = 0; i < rowSize; i++) {
+			for (int j = 0; j < colSize; j++) {
+				out << getExpression(i, j);
+				if (j != colSize-1) {
 					out << ";";
 				}
 				else {

@@ -12,15 +12,13 @@ using std::endl;
 class App {
     Table table;
 
-    void set() {
-        cout << "In Set()\n";
+    void set() {     
         Address address;
         string expression;
         address.read();
         while (cin.peek() == ' ') {
             cin.ignore();
         }
-        cout << "After while\n";
         getline(cin, expression);
         table.setExpression(address.getRow(), address.getCol(), expression);
         cout << "Table was successfully updated" << endl;
@@ -94,7 +92,6 @@ public:
             string command;
             cin >> command;
             if (command == "SET") {
-                cout << "Command is set" << endl;
                 set();
             }
             else if (command == "PRINT") {

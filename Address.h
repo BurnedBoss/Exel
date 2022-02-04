@@ -9,6 +9,11 @@ class Address {
 	int col = 0;
 	bool isAbsolute = true;
 public:
+	Address(int row = 0, int col = 0, bool isAbsolute = true) {
+		this->row = row;
+		this->col = col;
+		this->isAbsolute = isAbsolute;
+	}
 	void read() {		
 		string str;
 		cin >> str;
@@ -76,5 +81,15 @@ public:
 
 	void makeRelativeAddress() {
 		this->isAbsolute = false;
+	}
+
+	bool isValid() const {
+		if (!isAbsolute) {
+			return true;
+		}
+		if (row < 0 || col < 0) {
+			return false;
+		}
+		return true;
 	}
 };
